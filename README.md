@@ -4,6 +4,12 @@ Gulp task for browserify with coffee-script.
 
 ## USAGE
 
+### Install
+
+```
+$ npm install gulp-coffeeify --save-dev
+```
+
 ### Example
 
 ```javascript
