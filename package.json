@@ -1,6 +1,6 @@
 {
   "name": "gulp-coffeeify",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Gulp task for browserify with coffee-script.",
   "main": "lib/index.js",
   "devDependencies": {

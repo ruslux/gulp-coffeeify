@@ -3,14 +3,14 @@ _           = require 'lodash'
 fs          = require 'fs'
 path        = require 'path'
 glob        = require 'glob'
-through     = require 'through'
 through2    = require 'through2'
 browserify  = require 'browserify'
 coffee      = require 'coffee-script'
-File        = require('gulp-util').File
+gutil       = require 'gulp-util'
 replaceExtension = require('gulp-util').replaceExtension
 PluginError = require('gulp-util').PluginError
 Readable    = require('stream').Readable || require 'readable-stream'
+File        = gutil.File
 
 # キャッシュ
 transformCache = {}
@@ -30,7 +30,7 @@ traceError = ->
     args[args.length - 1] = args[args.length - 1] + RESET
   else
     args.push RESET
-  console.error.apply console, args
+  gutil.log.apply gutil, args
 
 # 
 arrayStream = (items)->
@@ -54,6 +54,7 @@ module.exports = (opts = {})->
     aliases.forEach (alias)->
       return unless alias
       { cwd, base, file } = alias
+      file = ['**/*.coffee', '**/*.js', '**/*.json', '**/*.cson'] unless _.isArray file
       file.map (pattern)->
         return unless cwd
         dir = cwd
@@ -98,8 +99,8 @@ module.exports = (opts = {})->
 
     b.transform (file)->
 
-      data = ''
-      through ((buf)-> data += buf), ->
+      return through2.obj (data, enc, cb)->
+        data = String data
 
         if data is srcContents
           file = srcFile
@@ -111,9 +112,9 @@ module.exports = (opts = {})->
           data = transformCache[file][1]
         else
           if transformCache.hasOwnProperty(file)
-            console.log 'coffee: recompiling...', file
+            gutil.log 'coffee: recompiling...', file
           else
-            console.log 'coffee: compiling...', file
+            gutil.log 'coffee: compiling...', file
 
           if extname is '.coffee' or extname is '.cson'
             try
@@ -124,14 +125,13 @@ module.exports = (opts = {})->
               traceError 'coffee: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', file
               data = ''
 
-        @queue data
-        @queue null
-        return
+        @push data
+        cb()
 
     b.bundle (err, jsCode)->
 
       if err
-        console.error err
+        gutil.error err
         return
 
       else
@@ -140,7 +140,7 @@ module.exports = (opts = {})->
         file.contents = new Buffer jsCode
 
         # 
-        console.info "browserify:", srcFile, ">", destFile
+        gutil.log "browserify:", srcFile, ">", destFile
 
         file.path = destFile
         self.push file
