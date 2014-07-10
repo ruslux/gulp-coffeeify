@@ -61,7 +61,7 @@ module.exports = (opts = {})->
         dir = path.join(process.cwd(), dir) unless dir.match /^\//
         pattern = path.join dir, pattern
         glob.sync(pattern).forEach (file)->
-          alias = file.substr(dir.length + 1)
+          alias = path.relative dir, file
           alias = path.join base, alias if base
           alias = alias.replace /\.[^.]+$/, ''
           aliasMap[alias] = file
@@ -71,7 +71,7 @@ module.exports = (opts = {})->
     self = this
 
     if file.isStream()
-      return cb new PluginError 'gulp-browserify', 'Streaming not supported'
+      return cb new PluginError 'gulp-coffeeify', 'Streaming not supported'
 
     opts.filename = file.path
     opts.data = file.data if file.data
@@ -108,13 +108,15 @@ module.exports = (opts = {})->
         extname = path.extname file
         mtime   = fs.statSync(file).mtime.getTime()
 
+        filePath = path.relative process.cwd(), file
+
         if transformCache.hasOwnProperty(file) and transformCache[file][0] is mtime
           data = transformCache[file][1]
         else
           if transformCache.hasOwnProperty(file)
-            gutil.log 'coffee: recompiling...', file
+            gutil.log gutil.colors.green 'coffee-script: recompiling...', filePath
           else
-            gutil.log 'coffee: compiling...', file
+            gutil.log gutil.colors.green 'coffee-script: compiling...', filePath
 
           if extname is '.coffee' or extname is '.cson'
             try
@@ -122,7 +124,7 @@ module.exports = (opts = {})->
               data = coffee.compile data
               transformCache[file] = [mtime, data]
             catch e
-              traceError 'coffee: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', file
+              traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath
               data = ''
 
         @push data
@@ -131,7 +133,7 @@ module.exports = (opts = {})->
     b.bundle (err, jsCode)->
 
       if err
-        gutil.error err
+        traceError err
         return
 
       else
@@ -139,8 +141,11 @@ module.exports = (opts = {})->
         # 書き出し
         file.contents = new Buffer jsCode
 
+        srcFilePath = path.relative process.cwd(), srcFile
+        destFilePath = path.relative process.cwd(), destFile
+
         # 
-        gutil.log "browserify:", srcFile, ">", destFile
+        gutil.log gutil.colors.green "coffeeify: #{srcFilePath} > #{destFilePath}"
 
         file.path = destFile
         self.push file

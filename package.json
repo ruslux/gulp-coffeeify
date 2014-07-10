@@ -1,8 +1,8 @@
 {
   "name": "gulp-coffeeify",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Gulp task for browserify with coffee-script.",
-  "main": "lib/index.js",
+  "main": "lib/coffeeify",
   "devDependencies": {
     "gulp": "^3.8.5",
     "gulp-clean": "^0.3.1",
@@ -14,7 +14,6 @@
     "glob": "^4.0.3",
     "gulp-util": "^2.2.19",
     "lodash": "^2.4.1",
-    "through": "^2.3.4",
     "through2": "^0.5.1"
   },
   "repository": {
@@ -25,10 +24,8 @@
   "keywords": [
     "coffee-script",
     "browserify",
-    "v2",
-    "js",
-    "plugin",
-    "transform"
+    "gulp",
+    "gulpplugin"
   ],
   "author": {
     "name": "Yusuke Narita",
