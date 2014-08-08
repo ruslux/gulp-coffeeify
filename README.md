@@ -14,7 +14,7 @@ $ npm install gulp-coffeeify --save-dev
 
 ```javascript
 var gulp = require('gulp');
-var cofeeify = require('gulp-coffeeify');
+var coffeeify = require('gulp-coffeeify');
 
 // Basic usage
 gulp.task('scripts', function() {
