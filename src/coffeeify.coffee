@@ -139,7 +139,6 @@ module.exports = (opts = {})->
           if opts.transforms
             for xform in opts.transforms
               if extname is xform.ext
-                console.log extname
                 try
                   data = xform.transform data
                   transformCache[file] = [mtime, data]
