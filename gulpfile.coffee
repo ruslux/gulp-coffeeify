@@ -18,3 +18,4 @@ gulp.task 'coffee', ->
 # Build
 gulp.task 'default', ['clean'], ->
   gulp.start 'coffee'
+  gulp.watch ['gulpfile.coffee', 'src/*.*'], ['coffee']

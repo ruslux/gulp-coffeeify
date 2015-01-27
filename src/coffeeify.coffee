@@ -44,6 +44,11 @@ arrayStream = (items)->
       readable.push null
   return readable
 
+# 変換
+cson = (data) ->
+  data = "module.exports =\n" + data if extname is '.cson'
+  coffee.compile data
+
 # 
 module.exports = (opts = {})->
 
@@ -65,6 +70,19 @@ module.exports = (opts = {})->
           alias = path.join base, alias if base
           alias = alias.replace /\.[^.]+$/, ''
           aliasMap[alias] = file
+
+  unless opts.transforms
+    opts.transforms = []
+  unless(_.find opts.transforms, (xform) -> xform.ext is ".coffee")
+    opts.transforms.push {
+      ext: '.coffee'
+      transform: coffee.compile
+    }
+  unless(_.find opts.transforms, (xform) -> xform.ext is ".cson")
+    opts.transforms.push {
+      ext: '.cson'
+      transform: cson
+    }
 
   # through
   through2.obj (file, enc, cb)->
@@ -121,16 +139,13 @@ module.exports = (opts = {})->
           if opts.transforms
             for xform in opts.transforms
               if extname is xform.ext
-                data = xform.transform data
-                transformCache[file] = [mtime, data]
-          if extname is '.coffee' or extname is '.cson'
-            try
-              data = "module.exports =\n" + data if extname is '.cson'
-              data = coffee.compile data
-              transformCache[file] = [mtime, data]
-            catch e
-              traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath
-              data = ''
+                console.log extname
+                try
+                  data = xform.transform data
+                  transformCache[file] = [mtime, data]
+                catch e
+                  traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath
+                  data = ''
 
         @push data
         cb()
