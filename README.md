@@ -60,7 +60,7 @@ gulp.task('scripts', function() {
     .pipe(coffeeify({
       transforms: [
         {
-          ext: '.ext',
+          ext: '.extension',
           transform: xform
         }
       ]
@@ -68,6 +68,8 @@ gulp.task('scripts', function() {
     .pipe(gulp.dest('./build/js'));
 });
 ```
+
+will (crudely) wrap up the contents of any `.extension` file into a string passed into module exports
 
 ## License
 Copyright (c) 2014 Yusuke Narita
