@@ -47,6 +47,28 @@ gulp.task('scripts', function() {
 
 You can use `src/coffee/app/views/View.coffee` as `var View = require('app/views/View');`
 
+### transforms
+
+```javascript
+var gulp = require('gulp');
+var cofeeify = require('gulp-coffeeify');
+var xform = function(data){
+  return 'module.exports = "' + data + '"';
+}
+gulp.task('scripts', function() {
+  gulp.src('src/coffee/**/*.coffee')
+    .pipe(coffeeify({
+      transforms: [
+        {
+          ext: '.ext',
+          transform: xform
+        }
+      ]
+    }))
+    .pipe(gulp.dest('./build/js'));
+});
+```
+
 ## License
 Copyright (c) 2014 Yusuke Narita
 Licensed under the MIT license.

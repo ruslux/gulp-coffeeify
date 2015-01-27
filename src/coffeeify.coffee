@@ -118,6 +118,11 @@ module.exports = (opts = {})->
           else
             gutil.log gutil.colors.green 'coffee-script: compiling...', filePath
 
+          if opts.transforms
+            for xform in opts.transforms
+              if extname is xform.ext
+                data = xform.transform data
+                transformCache[file] = [mtime, data]
           if extname is '.coffee' or extname is '.cson'
             try
               data = "module.exports =\n" + data if extname is '.cson'
