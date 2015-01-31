@@ -71,7 +71,6 @@ module.exports = (opts = {})->
           alias = alias.replace /\.[^.]+$/, ''
           alias = alias.replace /\\+/g, '/'
           aliasMap[alias] = file
-  console.log aliasMap
   unless opts.transforms
     opts.transforms = []
   unless(_.find opts.transforms, (xform) -> xform.ext is ".coffee")
