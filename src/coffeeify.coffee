@@ -71,7 +71,7 @@ module.exports = (opts = {})->
           alias = alias.replace /\.[^.]+$/, ''
           alias = alias.replace /\\+/g, '/'
           aliasMap[alias] = file
-
+  console.log aliasMap
   unless opts.transforms
     opts.transforms = []
   unless(_.find opts.transforms, (xform) -> xform.ext is ".coffee")
@@ -143,7 +143,10 @@ module.exports = (opts = {})->
             for xform in opts.transforms
               if extname is xform.ext
                 try
-                  data = xform.transform data, raw
+                  if xform.transformRaw
+                    data = xform.transformRaw raw
+                  else
+                    data = xform.transform data
                   transformCache[file] = [mtime, data]
                 catch e
                   traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath
