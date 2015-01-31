@@ -118,7 +118,9 @@ module.exports = (opts = {})->
     b.transform (file)->
 
       return through2.obj (data, enc, cb)->
+        raw = data
         data = String data
+
 
         if data is srcContents
           file = srcFile
@@ -140,7 +142,7 @@ module.exports = (opts = {})->
             for xform in opts.transforms
               if extname is xform.ext
                 try
-                  data = xform.transform data
+                  data = xform.transform data, raw
                   transformCache[file] = [mtime, data]
                 catch e
                   traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath
