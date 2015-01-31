@@ -69,6 +69,7 @@ module.exports = (opts = {})->
           alias = path.relative dir, file
           alias = path.join base, alias if base
           alias = alias.replace /\.[^.]+$/, ''
+          alias = alias.replace /\\+/g, '/'
           aliasMap[alias] = file
 
   unless opts.transforms
