@@ -9,14 +9,12 @@ coffee      = require 'coffee-script'
 gutil       = require 'gulp-util'
 replaceExtension = require('gulp-util').replaceExtension
 PluginError = require('gulp-util').PluginError
-Readable    = require('stream').Readable || require 'readable-stream'
-File        = gutil.File
 
-# キャッシュ
+# cache
 transformCache = {}
 aliasMap = {}
 
-# エラー
+# error
 RED   = '\u001b[31m'
 RESET = '\u001b[0m'
 traceError = ->
@@ -33,26 +31,9 @@ traceError = ->
   gutil.log.apply gutil, args
 
 # 
-arrayStream = (items)->
-  index = 0
-  readable = new Readable objectMode: true
-  readable._read = ->
-    if index < items.length
-      readable.push items[index]
-      index++
-    else
-      readable.push null
-  return readable
-
-# 変換
-cson = (data) ->
-  data = "module.exports =\n" + data if extname is '.cson'
-  coffee.compile data
-
-# 
 module.exports = (opts = {})->
 
-  # エイリアスマップを作成
+  # create alias map
   aliasMap = {}
   if opts.aliases
     aliases = if _.isArray(opts.aliases) then opts.aliases else [opts.aliases]
@@ -71,18 +52,21 @@ module.exports = (opts = {})->
           alias = alias.replace /\.[^.]+$/, ''
           alias = alias.replace /\\+/g, '/'
           aliasMap[alias] = file
-  unless opts.transforms
-    opts.transforms = []
-  unless(_.find opts.transforms, (xform) -> xform.ext is ".coffee")
-    opts.transforms.push {
+
+  opts.transforms ?= []
+
+  unless(_.find opts.transforms, (transform) -> transform.ext is ".coffee")
+    opts.transforms.push
       ext: '.coffee'
-      transform: coffee.compile
-    }
-  unless(_.find opts.transforms, (xform) -> xform.ext is ".cson")
-    opts.transforms.push {
+      transform: (data)->
+        coffee.compile data, bare: true, inline: true
+
+  unless(_.find opts.transforms, (transform) -> transform.ext is ".cson")
+    opts.transforms.push
       ext: '.cson'
-      transform: cson
-    }
+      transform: (data)->
+        data = "module.exports =\n" + data if extname is '.cson'
+        coffee.compile data
 
   # through
   through2.obj (file, enc, cb)->
@@ -103,7 +87,7 @@ module.exports = (opts = {})->
     if file.isNull()
       data.entries = file.path
     if file.isBuffer()
-      data.entries = arrayStream [file.contents]
+      data.entries = [file.path]
 
     opts.basedir = path.dirname(file.path)
 
@@ -111,7 +95,7 @@ module.exports = (opts = {})->
       opts.extensions = ['.js', '.coffee', '.json', '.cson']
 
     opts.commondir = true
-    opts.builtins  = _.defaults require('browserify/lib/builtins'), aliasMap
+    opts.modules  = _.defaults require('browserify/lib/builtins'), aliasMap
 
     b = browserify(data, opts)
 
@@ -120,7 +104,6 @@ module.exports = (opts = {})->
       return through2.obj (data, enc, cb)->
         raw = data
         data = String data
-
 
         if data is srcContents
           file = srcFile
@@ -138,18 +121,17 @@ module.exports = (opts = {})->
           else
             gutil.log gutil.colors.green 'coffee-script: compiling...', filePath
 
-          if opts.transforms
-            for xform in opts.transforms
-              if extname is xform.ext
-                try
-                  if xform.transformRaw
-                    data = xform.transformRaw raw
-                  else
-                    data = xform.transform data
-                  transformCache[file] = [mtime, data]
-                catch e
-                  traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath
-                  data = ''
+          for transform in opts.transforms
+            if extname is transform.ext
+              try
+                if transform.transformRaw
+                  data = transform.transformRaw raw
+                else
+                  data = transform.transform data
+                transformCache[file] = [mtime, data]
+              catch e
+                traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath
+                data = ''
 
         @push data
         cb()
@@ -162,7 +144,7 @@ module.exports = (opts = {})->
 
       else
 
-        # 書き出し
+        # output
         file.contents = new Buffer jsCode
 
         srcFilePath = path.relative process.cwd(), srcFile
@@ -174,5 +156,5 @@ module.exports = (opts = {})->
         file.path = destFile
         self.push file
       
-      # コールバック
+      # callback
       cb()

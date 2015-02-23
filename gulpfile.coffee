@@ -1,19 +1,30 @@
 
 # require modules
 gulp   = require 'gulp'
-clean  = require 'gulp-clean'
+del    = require 'del'
 coffee = require 'gulp-coffee'
 
 # Clean
-gulp.task 'clean', ->
-  gulp.src 'lib'
-    .pipe clean()
+gulp.task 'clean', (cb)->
+  del 'lib', cb
 
 # CoffeeScript
-gulp.task 'coffee', ->
+gulp.task 'build', ->
   gulp.src 'src/**/*.coffee'
     .pipe coffee()
     .pipe gulp.dest 'lib'
+
+# Test
+gulp.task 'test', ->
+  del 'test-result', ->
+    gulp.src 'test/*.coffee'
+      .pipe require('./lib/coffeeify')
+        aliases: [
+          { cwd: './test', base: 'test' }
+        ]
+        options:
+          debug: true
+      .pipe gulp.dest 'test-result'
 
 # Build
 gulp.task 'default', ['clean'], ->

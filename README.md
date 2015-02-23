@@ -1,6 +1,6 @@
 # gulp-coffeeify
 
-Gulp task for browserify with coffee-script.
+Browserify plugin with coffee-script for Gulp.
 
 ## USAGE
 
