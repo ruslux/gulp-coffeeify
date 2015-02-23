@@ -9,6 +9,7 @@ coffee      = require 'coffee-script'
 gutil       = require 'gulp-util'
 replaceExtension = require('gulp-util').replaceExtension
 PluginError = require('gulp-util').PluginError
+convert     = require 'convert-source-map'
 
 # cache
 transformCache = {}
@@ -52,19 +53,24 @@ module.exports = (opts = {})->
           alias = alias.replace /\.[^.]+$/, ''
           alias = alias.replace /\\+/g, '/'
           aliasMap[alias] = file
+  console.log aliasMap
 
   opts.transforms ?= []
 
   unless(_.find opts.transforms, (transform) -> transform.ext is ".coffee")
     opts.transforms.push
       ext: '.coffee'
-      transform: (data)->
-        coffee.compile data, bare: true, inline: true
+      transform: (data, file)->
+        { js, v3SourceMap } = coffee.compile data, bare: true, inline: true, sourceMap: true, generatedFile: file
+        map = convert.fromJSON v3SourceMap
+        map.setProperty 'sources', [file]
+        js += "\n#{map.toComment()}\n" if opts.debug
+        js
 
   unless(_.find opts.transforms, (transform) -> transform.ext is ".cson")
     opts.transforms.push
       ext: '.cson'
-      transform: (data)->
+      transform: (data, file)->
         data = "module.exports =\n" + data if extname is '.cson'
         coffee.compile data
 
@@ -75,8 +81,10 @@ module.exports = (opts = {})->
     if file.isStream()
       return cb new PluginError 'gulp-coffeeify', 'Streaming not supported'
 
-    opts.filename = file.path
-    opts.data = file.data if file.data
+    options = _.defaults {}, opts.options
+
+    options.filename = file.path
+    options.data = file.data if file.data
 
     srcFile  = file.path
     srcContents = String file.contents
@@ -89,15 +97,14 @@ module.exports = (opts = {})->
     if file.isBuffer()
       data.entries = [file.path]
 
-    opts.basedir = path.dirname(file.path)
+    options.basedir = path.dirname(file.path)
 
-    unless opts.extensions
-      opts.extensions = ['.js', '.coffee', '.json', '.cson']
+    unless options.extensions
+      options.extensions = ['.coffee', '.cson', '.js', '.json']
 
-    opts.commondir = true
-    opts.modules  = _.defaults require('browserify/lib/builtins'), aliasMap
+    options.commondir = true
 
-    b = browserify(data, opts)
+    b = browserify(data, options)
 
     b.transform (file)->
 
@@ -125,9 +132,18 @@ module.exports = (opts = {})->
             if extname is transform.ext
               try
                 if transform.transformRaw
-                  data = transform.transformRaw raw
+                  data = transform.transformRaw raw, file
                 else
-                  data = transform.transform data
+                  data = transform.transform data, file
+
+                matches = data.match /require\('.+?'\)/g
+                if matches
+                  for match in matches
+                    module = match.match(/require\('(.+?)'\)/)[1]
+                    if aliasMap.hasOwnProperty module
+                      relativePath = "./" + path.relative path.dirname(file), aliasMap[module]
+                      data = data.replace "require('#{module}')", "require('#{relativePath}')"
+
                 transformCache[file] = [mtime, data]
               catch e
                 traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath

@@ -1,16 +1,17 @@
 {
   "name": "gulp-coffeeify",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Browserify plugin with coffee-script for Gulp.",
   "main": "lib/coffeeify",
   "devDependencies": {
     "del": "^1.1.1",
-    "gulp": "^3.8.8",
-    "gulp-coffee": "^2.2.0"
+    "gulp": "^3.8.11",
+    "gulp-coffee": "^2.3.1"
   },
   "dependencies": {
-    "browserify": "^4.2.3",
+    "browserify": "^9.0.3",
     "coffee-script": "^1.9.1",
+    "convert-source-map": "^0.5.0",
     "glob": "^4.0.5",
     "gulp-util": "^2.2.20",
     "lodash": "^2.4.1",

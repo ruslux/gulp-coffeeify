@@ -16,17 +16,15 @@ gulp.task 'build', ->
 
 # Test
 gulp.task 'test', ->
-  del 'test-result', ->
-    gulp.src 'test/*.coffee'
-      .pipe require('./lib/coffeeify')
-        aliases: [
-          { cwd: './test', base: 'test' }
-        ]
-        options:
-          debug: true
-      .pipe gulp.dest 'test-result'
+  gulp.src 'test/*.coffee'
+    .pipe require('./lib/coffeeify')
+      aliases:
+        { cwd: './test', base: 'test' }
+      options:
+        debug: true
+    .pipe gulp.dest 'test-result'
 
 # Build
 gulp.task 'default', ['clean'], ->
-  gulp.start 'coffee'
-  gulp.watch ['gulpfile.coffee', 'src/*.*'], ['coffee']
+  gulp.start 'build'
+  gulp.watch ['gulpfile.coffee', 'src/*.*'], ['build']
