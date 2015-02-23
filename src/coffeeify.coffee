@@ -53,7 +53,6 @@ module.exports = (opts = {})->
           alias = alias.replace /\.[^.]+$/, ''
           alias = alias.replace /\\+/g, '/'
           aliasMap[alias] = file
-  console.log aliasMap
 
   opts.transforms ?= []
 
