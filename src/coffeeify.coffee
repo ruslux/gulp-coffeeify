@@ -82,6 +82,9 @@ module.exports = (opts = {})->
 
     options = _.defaults {}, opts.options
 
+    transforms = options.transforms
+    delete options.transforms
+
     options.filename = file.path
     options.data = file.data if file.data
 
@@ -127,6 +130,7 @@ module.exports = (opts = {})->
           else
             gutil.log gutil.colors.green 'coffee-script: compiling...', filePath
 
+          cacheSkip = false
           for transform in opts.transforms
             if extname is transform.ext
               try
@@ -143,13 +147,16 @@ module.exports = (opts = {})->
                       relativePath = "./" + path.relative path.dirname(file), aliasMap[module]
                       data = data.replace "require('#{module}')", "require('#{relativePath}')"
 
-                transformCache[file] = [mtime, data]
               catch e
                 traceError 'coffee-script: COMPILE ERROR: ', e.message + ': line ' + (e.location.first_line + 1), 'at', filePath
+                cacheSkip = true
                 data = ''
 
+          transformCache[file] = [mtime, data] unless cacheSkip
         @push data
         cb()
+
+    b.transform transforms if transforms
 
     b.bundle (err, jsCode)->
 

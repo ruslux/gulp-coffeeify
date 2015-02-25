@@ -1,14 +1,19 @@
 
 # require modules
-gulp   = require 'gulp'
-del    = require 'del'
-coffee = require 'gulp-coffee'
+gulp        = require 'gulp'
+del         = require 'del'
+coffee      = require 'gulp-coffee'
+runSequence = require 'run-sequence'
+through2    = require 'through2'
+datauri     = require 'datauri'
 
 # Clean
 gulp.task 'clean', (cb)->
   del 'lib', cb
+gulp.task 'clean-test', (cb)->
+  del 'test-build', cb
 
-# CoffeeScript
+# Build
 gulp.task 'build', ->
   gulp.src 'src/**/*.coffee'
     .pipe coffee()
@@ -16,15 +21,26 @@ gulp.task 'build', ->
 
 # Test
 gulp.task 'test', ->
-  gulp.src 'test/*.coffee'
+  gulp.src 'test/**/*.coffee'
     .pipe require('./lib/coffeeify')
       aliases:
         { cwd: './test', base: 'test' }
       options:
         debug: true
-    .pipe gulp.dest 'test-result'
+        transforms: (file)->
+          return through2.obj (data, enc, cb)->
 
-# Build
-gulp.task 'default', ['clean'], ->
-  gulp.start 'build'
-  gulp.watch ['gulpfile.coffee', 'src/*.*'], ['build']
+            matches = data.match /dataURI\(.+\.(png|jpe?g|gif)\)/g
+            if matches
+              for match in matches
+                dataURI = match.replace /dataURI\((.+\.(png|jpe?g|gif))\)/, (all, imageURL)->
+                  return datauri imageURL
+                data = data.replace match, dataURI
+
+            @push data
+            cb()
+    .pipe gulp.dest 'test-build'
+
+# Default task
+gulp.task 'default', ->
+  runSequence ['clean', 'clean-test'], 'build', 'test'

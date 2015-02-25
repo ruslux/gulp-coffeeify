@@ -7,5 +7,10 @@ class Test1 extends Test0
     super()
     console.log 'constructor Test1'
 
+    image = new Image
+    image.src = 'dataURI(test/snow.png)'
+
+    document.body.appendChild image
+
 
 module.exports = Test1

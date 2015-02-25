@@ -26,7 +26,26 @@ gulp.task('scripts', function() {
 
 ## Options
 
-### aliases
+### browserify options
+
+```javascript
+var gulp = require('gulp');
+var cofeeify = require('gulp-coffeeify');
+gulp.task('scripts', function() {
+  gulp.src('src/coffee/**/*.coffee')
+    .pipe(coffeeify({
+      options: {
+        debug: true, // source map
+        paths: [__dirname + '/node_modules', __dirname + '/src/coffee']
+      }
+    }))
+    .pipe(gulp.dest('./build/js'));
+});
+```
+
+### aliases [DEPRECATED]
+
+*DEPRECATED*: You shuld use a 'paths' options of browserify.
 
 ```javascript
 var gulp = require('gulp');
@@ -47,7 +66,7 @@ gulp.task('scripts', function() {
 
 You can use `src/coffee/app/views/View.coffee` as `var View = require('app/views/View');`
 
-### transforms
+### transforms [DEPRECATED]
 
 ```javascript
 var gulp = require('gulp');
