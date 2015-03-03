@@ -1,6 +1,8 @@
 
 Test0 = require 'test/subdir/Test0'
 
+csonTest = require 'test/test'
+
 class Test1 extends Test0
 
   constructor: ->

@@ -70,7 +70,7 @@ module.exports = (opts = {})->
     opts.transforms.push
       ext: '.cson'
       transform: (data, file)->
-        data = "module.exports =\n" + data if extname is '.cson'
+        data = "module.exports =\n" + data
         coffee.compile data
 
   # through
