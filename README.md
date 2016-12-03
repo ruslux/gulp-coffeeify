@@ -70,7 +70,7 @@ You can use `src/coffee/app/views/View.coffee` as `var View = require('app/views
 
 ```javascript
 var gulp = require('gulp');
-var cofeeify = require('gulp-coffeeify');
+var coffeeify = require('gulp-coffeeify');
 var xform = function(data){
   return 'module.exports = "' + data + '"';
 }
