@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "browserify": "^9.0.3",
-    "coffee-script": "^1.9.1",
+    "coffee-script": "git://github.com/ruslux/coffee-script.git#63a7c4761ca056cffddc64d13997ab65c7ec1a93",
     "convert-source-map": "^0.5.0",
     "glob": "^4.0.5",
     "gulp-util": "^2.2.20",
